@@ -80,12 +80,14 @@ done
 docker run --rm --platform $PLATFORM \
   -e JAVA_OPTS="-Xms512M -Xmx2G" \
   -v "$(host_path "$DIST"):/opt/pinot" -v "$(host_path "$DIR"):/conf" -v "$(host_path "$DIR/deepstore"):/deepstore" $IMG \
-  /opt/pinot/bin/pinot-admin.sh LaunchDataIngestionJob -jobSpecFile /conf/ingestion-job.yaml 2>&1 | grep -E "Finished|Exception|Error|Creating|segment" | head -40
+  /opt/pinot/bin/pinot-admin.sh LaunchDataIngestionJob -jobSpecFile /conf/ingestion-job.yaml 2>&1 \
+  | grep -v -E "^\s+at " | grep -i -E "ERROR|Exception|Finished|Creating|segment" | head -40
+ls "$SEGS"/*.tar.gz >/dev/null 2>&1 || { echo "segment creation produced no tarballs (see output above)"; exit 1; }
 
 # 3. untarred v3 layout for the remote loader
 for tar in "$SEGS"/*.tar.gz; do
   seg=$(basename "$tar" .tar.gz)
-  rm -rf "$REMOTE/$seg"
+  rm -rf "${REMOTE:?}/${seg:?}"
   tar -xzf "$tar" -C "$REMOTE"
   [ -f "$REMOTE/$seg/v3/columns.psf" ] || { echo "unexpected layout in $tar"; ls -R "$REMOTE/$seg" | head; exit 1; }
   echo "published $seg -> deepstore/remote/$TABLE/$seg/v3 ($(du -sh "$REMOTE/$seg/v3/columns.psf" | cut -f1))"

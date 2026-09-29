@@ -35,7 +35,7 @@ q() {
   echo "--- $sql"
   echo "$res" | $JQ -c '{timeUsedMs, numDocsScanned, numSegmentsQueried, numSegmentsProcessed, numEntriesScannedInFilter, numEntriesScannedPostFilter, rows: (.resultTable.rows|length), exceptions: (.exceptions|map(.message)|.[0]|.[0:120])}'
   sleep 1
-  local after; after=$(grep -c "Remote fetch stats" "$LOG" 2>/dev/null || echo 0)
+  local after; after=$(grep -c "Remote fetch stats" "$LOG" 2>/dev/null || true); after=${after:-0}
   if [ "$after" -gt "$STATS_SEEN" ]; then
     grep "Remote fetch stats" "$LOG" | tail -n +$((STATS_SEEN + 1)) | sed 's/.*Remote fetch stats for table: [^,]*,/    fetch stats:/'
   else
@@ -44,7 +44,7 @@ q() {
   STATS_SEEN=$after
 }
 
-STATS_SEEN=$(grep -c "Remote fetch stats" "$LOG" 2>/dev/null || echo 0)
+STATS_SEEN=$(grep -c "Remote fetch stats" "$LOG" 2>/dev/null || true); STATS_SEEN=${STATS_SEEN:-0}
 echo "=== $LABEL"
 q "SELECT COUNT(*) FROM $T"
 q "SELECT * FROM $T LIMIT 10"

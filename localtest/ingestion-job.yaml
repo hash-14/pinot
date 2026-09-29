@@ -41,4 +41,5 @@ segmentNameGeneratorSpec:
   type: inputFile
   configs:
     file.path.pattern: '.+/(.+)\.csv'
-    segment.name.template: 'streams_daily_${filePathPattern:\1}'
+    # \$ because the job spec is itself a Groovy template (LaunchDataIngestionJob renders it first)
+    segment.name.template: 'streams_daily_\${filePathPattern:\1}'

@@ -75,7 +75,7 @@ docker run -d --name lp-zk --network $NET --platform $PLATFORM \
 sleep 5
 
 docker run -d --name lp-controller --network $NET --platform $PLATFORM \
-  --env-file "$DIR/aws-env.list" -e AWS_REGION="${AWS_REGION:-eu-west-1}" \
+  --env-file "$CONF/aws-env.list" -e AWS_REGION="${AWS_REGION:-eu-west-1}" \
   -e JAVA_OPTS="-Xms256M -Xmx1G" \
   -v "$DIST:/opt/pinot" -v "$CONF:/conf" -v "$DEEPSTORE:/deepstore" -p 9001:9000 $IMG \
   /opt/pinot/bin/pinot-admin.sh StartController -zkAddress lp-zk:2181 -clusterName pinot-local \
@@ -87,7 +87,7 @@ docker run -d --name lp-broker --network $NET --platform $PLATFORM \
   /opt/pinot/bin/pinot-admin.sh StartBroker -zkAddress lp-zk:2181 -clusterName pinot-local > /dev/null
 
 docker run -d --name lp-server --network $NET --platform $PLATFORM \
-  --env-file "$DIR/aws-env.list" -e AWS_REGION="${AWS_REGION:-eu-west-1}" \
+  --env-file "$CONF/aws-env.list" -e AWS_REGION="${AWS_REGION:-eu-west-1}" \
   -e LOG_ROOT=/logs -e PINOT_COMPONENT=all \
   -e JAVA_OPTS="${SERVER_JAVA_OPTS:--Xms512M -Xmx2G} -Dlog4j2.configurationFile=/conf/log4j2-local.xml" \
   -v "$DIST:/opt/pinot" -v "$CONF:/conf" -v "$DEEPSTORE:/deepstore" -v "$LOGS:/logs" $IMG \
