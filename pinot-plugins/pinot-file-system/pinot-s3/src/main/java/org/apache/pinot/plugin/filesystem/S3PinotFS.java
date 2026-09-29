@@ -199,10 +199,10 @@ public class S3PinotFS extends BasePinotFS {
         }
 
         if (_s3Config.getRequestChecksumCalculationWhenRequired() == RequestChecksumCalculation.WHEN_REQUIRED) {
-          s3ClientBuilder.responseChecksumValidation(ResponseChecksumValidation.WHEN_REQUIRED);
+          s3ClientBuilder.requestChecksumCalculation(RequestChecksumCalculation.WHEN_REQUIRED);
         }
         if (_s3Config.getResponseChecksumValidationWhenRequired() == ResponseChecksumValidation.WHEN_REQUIRED) {
-          s3ClientBuilder.requestChecksumCalculation(RequestChecksumCalculation.WHEN_REQUIRED);
+          s3ClientBuilder.responseChecksumValidation(ResponseChecksumValidation.WHEN_REQUIRED);
         }
         if (_s3Config.useLegacyMd5Plugin()) {
           s3ClientBuilder.addPlugin(LegacyMd5Plugin.create());
