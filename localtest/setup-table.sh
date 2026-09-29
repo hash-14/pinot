@@ -17,28 +17,35 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-
-# Registers schema + remote-query table on the local controller and uploads the two local segment tars.
+# Creates the schema + table and uploads the demo segment tarballs (from make-demo-data.sh,
+# or SEGMENTS_DIR=<dir with *.tar.gz>). The untarred copies must already be under
+# deepstore/remote/<table>/ - that is what the server reads; the tarball upload only
+# registers the segment with the controller/Helix.
 set -euo pipefail
 DIR="$(cd "$(dirname "$0")" && pwd)"
 C=http://localhost:9001
-T=artist_dashboard_daily_streams_aggregated
+T=streams_daily
+SEGMENTS_DIR=${SEGMENTS_DIR:-$DIR/deepstore/demo/segments}
+
 until curl -sf $C/health >/dev/null; do echo "waiting for controller"; sleep 3; done
-# /health goes green before Helix is ready to take schema writes: retry the first write until it lands
+# The controller passes /health before tenants register in Helix; writes fail until they do
 for i in $(seq 1 30); do
   curl -sf -X POST $C/schemas -H 'Content-Type: application/json' -d @"$DIR/schema.json" && echo && break
   echo "controller not ready for writes yet ($i)"; sleep 3
 done
-# table creation also fails until the broker/server instances have registered their tenants: retry it too
 for i in $(seq 1 30); do
   curl -sf -X POST $C/tables -H 'Content-Type: application/json' -d @"$DIR/table.json" && echo && break
   echo "table not accepted yet ($i)"; sleep 3
 done
 curl -sf $C/tables/$T >/dev/null || { echo "table creation failed"; exit 1; }
-for d in 2026-04-09 2026-06-22; do
-  tar=$(ls ~/pinot-ingest/work/$d/segments/*.tar.gz)
-  echo "uploading $(basename $tar)"
+
+n=0
+for tar in "$SEGMENTS_DIR"/*.tar.gz; do
+  [ -f "$tar" ] || { echo "no tarballs in $SEGMENTS_DIR — run make-demo-data.sh first"; exit 1; }
+  echo "uploading $(basename "$tar")"
   curl -sf -F segment=@"$tar" "$C/v2/segments?tableName=$T&tableType=OFFLINE" && echo
+  n=$((n + 1))
 done
 sleep 5
 curl -s "$C/segments/$T/servers" | head -c 600; echo
+echo "uploaded $n segments"

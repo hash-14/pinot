@@ -1,0 +1,44 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+# Segment creation only (no push): CSV in deepstore/demo/raw -> tarballs in deepstore/demo/segments.
+# make-demo-data.sh then untars them into deepstore/remote/<table>/<segment>/v3/ (what the fork
+# range-reads) and setup-table.sh uploads the tarballs to the controller for Helix assignment.
+executionFrameworkSpec:
+  name: standalone
+  segmentGenerationJobRunnerClassName: org.apache.pinot.plugin.ingestion.batch.standalone.SegmentGenerationJobRunner
+jobType: SegmentCreation
+inputDirURI: 'file:///deepstore/demo/raw/'
+includeFileNamePattern: 'glob:**/*.csv'
+outputDirURI: 'file:///deepstore/demo/segments/'
+overwriteOutput: true
+pinotFSSpecs:
+  - scheme: file
+    className: org.apache.pinot.spi.filesystem.LocalPinotFS
+recordReaderSpec:
+  dataFormat: csv
+  className: org.apache.pinot.plugin.inputformat.csv.CSVRecordReader
+tableSpec:
+  tableName: streams_daily
+  schemaURI: 'file:///conf/schema.json'
+  tableConfigURI: 'file:///conf/table.json'
+segmentNameGeneratorSpec:
+  type: inputFile
+  configs:
+    file.path.pattern: '.+/(.+)\.csv'
+    segment.name.template: 'streams_daily_${filePathPattern:\1}'

@@ -1,5 +1,5 @@
 {
-  "tableName": "artist_dashboard_daily_streams_aggregated",
+  "tableName": "streams_daily",
   "tableType": "OFFLINE",
   "segmentsConfig": {
     "timeColumnName": "day_dt",
@@ -10,27 +10,22 @@
   },
   "tenants": {},
   "routing": {
-    "segmentPrunerTypes": [
-      "time"
-    ]
+    "segmentPrunerTypes": ["time"]
   },
   "tableIndexConfig": {
     "loadMode": "MMAP",
-    "sortedColumn": [
-      "artist_id"
-    ],
+    "sortedColumn": ["artist_id"],
+    "invertedIndexColumns": ["country_code", "song_id", "device"],
+    "rangeIndexColumns": ["all_streams"],
+    "bloomFilterConfigs": {
+      "song_id": { "fpp": 0.001 },
+      "song_name": { "fpp": 0.001 }
+    },
     "starTreeIndexConfigs": [
       {
-        "dimensionsSplitOrder": [
-          "day_dt",
-          "artist_id"
-        ],
+        "dimensionsSplitOrder": ["day_dt", "country_code", "artist_id"],
         "skipStarNodeCreationForDimensions": [],
-        "functionColumnPairs": [
-          "SUM__all_streams",
-          "SUM__full_streams",
-          "SUM__total_seconds_streamed"
-        ],
+        "functionColumnPairs": ["SUM__all_streams", "SUM__full_streams", "SUM__total_seconds_streamed"],
         "maxLeafRecords": 10000
       }
     ]
@@ -38,7 +33,7 @@
   "metadata": {
     "customConfigs": {
       "remote.query.enabled": "true",
-      "remote.query.base.uri": "file:///deepstore/remote/artist_dashboard_daily_streams_aggregated/"
+      "remote.query.base.uri": "file:///deepstore/remote/streams_daily/"
     }
   }
 }
